@@ -6,17 +6,22 @@ class Test
   def initialize
     @grok = Grok.new
     path = "#{File.dirname(__FILE__)}/../patterns/pure-ruby/base"
-    byebug
     @grok.add_patterns_from_file(path)
+    @grok.add_pattern('SYMBOL_VALUE', "[0-9']+")
+    @grok.add_pattern('ACNTST_C', 'ACNTST C : %{SYMBOL_VALUE:data}')
+    @grok.add_pattern('ACNTST_C_HVA', 'ACNTST C HVA : %{SYMBOL_VALUE:data}')
+    @input = File.read("#{File.dirname(__FILE__)}/input")
   end
   
-  def test_multiline
-    @grok.compile("hello%{GREEDYDATA}")
-    match = @grok.match("hello world \nthis is fun")
-    pp match.captures
-    
-    match = @grok.match("hello world this is fun")
-    pp match.captures
+  def match(pattern)
+    @grok.compile("%{#{pattern}}")
+    if match = @grok.match(@input)
+      pp match.captures
+    else
+      fail "Cannot match pattern '#{pattern}'"
+    end
   end
 end
-Test.new.test_multiline
+test_helper = Test.new
+test_helper.match('ACNTST_C')
+test_helper.match('ACNTST_C_HVA')
